@@ -6,6 +6,8 @@
     "build": "vite build"
   },
   "dependencies": {
+    "@stripe/react-stripe-js": "^5.4.1",
+    "@stripe/stripe-js": "^8.6.3",
     "react": "^17.0.0",
     "react-dom": "^17.0.0"
   },

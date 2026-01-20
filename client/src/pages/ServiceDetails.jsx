@@ -1,75 +1,61 @@
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import axios from 'axios';
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { Search, Filter } from "lucide-react";
 
-const ServiceDetails = () => {
-  const { id } = useParams();
-  const [service, setService] = useState(null);
-  const [user, setUser] = useState({ name: "John Doe", email: "john@example.com" }); // Replace with Auth context
+const Services = () => {
+    const [services, setServices] = useState([]);
+    const [search, setSearch] = useState("");
+    const [category, setCategory] = useState("");
 
-  useEffect(() => {
-    axios.get(`http://localhost:5000/services/${id}`)
-      .then(res => setService(res.data));
-  }, [id]);
+    useEffect(() => {
+        axios.get(`http://localhost:5000/services?search=${search}&type=${category}`)
+            .then(res => setServices(res.data));
+    }, [search, category]);
 
-  const { register, handleSubmit } = useForm();
+    return (
+        <div className="container mx-auto p-10">
+            <h2 className="text-4xl font-black mb-8">Decoration Packages</h2>
 
-  const onSubmit = async (data) => {
-    const bookingData = {
-      ...data,
-      serviceName: service.service_name,
-      price: service.cost,
-      customerEmail: user.email,
-      status: "Assigned"
-    };
-    
-    try {
-      await axios.post('http://localhost:5000/bookings', bookingData);
-      alert("Booking Successful!");
-      document.getElementById('booking-modal').close();
-    } catch (err) {
-      console.error(err);
-    }
-  };
+            {/* Filters */}
+            <div className="flex flex-col md:flex-row gap-4 mb-10 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-3 text-slate-400" size={20}/>
+                    <input 
+                        type="text" 
+                        placeholder="Search service name..." 
+                        className="input input-bordered w-full pl-10"
+                        onChange={(e) => setSearch(e.target.value)}
+                    />
+                </div>
+                <select className="select select-bordered w-full md:w-64" onChange={(e) => setCategory(e.target.value)}>
+                    <option value="">All Categories</option>
+                    <option value="home">Home Decor</option>
+                    <option value="wedding">Wedding</option>
+                    <option value="office">Office</option>
+                </select>
+            </div>
 
-  if (!service) return <span className="loading loading-spinner loading-lg"></span>;
-
-  return (
-    <div className="container mx-auto p-8">
-      <div className="card lg:card-side bg-base-100 shadow-xl border-2 border-accent/20">
-        <figure><img src={service.image} alt={service.service_name} className="w-full h-96 object-cover" /></figure>
-        <div className="card-body">
-          <h2 className="card-title text-3xl font-bold text-primary">{service.service_name}</h2>
-          <p className="text-gray-600">{service.description}</p>
-          <div className="badge badge-secondary p-4 text-lg">Cost: ৳{service.cost} {service.unit}</div>
-          
-          <div className="card-actions justify-end mt-10">
-            <button className="btn btn-primary" onClick={() => document.getElementById('booking-modal').showModal()}>
-              Book Now
-            </button>
-          </div>
+            {/* Service Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {services.map(service => (
+                    <div key={service._id} className="card bg-base-100 shadow-xl hover:shadow-2xl transition-all border border-slate-100">
+                        <figure className="h-56"><img src={service.image} className="w-full h-full object-cover" /></figure>
+                        <div className="card-body">
+                            <h2 className="card-title">{service.service_name}</h2>
+                            <p className="text-slate-500 line-clamp-2">{service.description}</p>
+                            <div className="flex justify-between items-center mt-4">
+                                <span className="text-2xl font-bold text-primary">৳{service.cost}</span>
+                                <div className="badge badge-outline">{service.service_category}</div>
+                            </div>
+                            <div className="card-actions mt-6">
+                                <button className="btn btn-primary btn-block rounded-xl">Details</button>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
         </div>
-      </div>
-
-      {/* --- Booking Modal --- */}
-      <dialog id="booking-modal" className="modal">
-        <div className="modal-box">
-          <h3 className="font-bold text-lg text-accent">Complete Your Booking</h3>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-4">
-            <input type="text" value={user.name} readOnly className="input input-bordered w-full bg-gray-100" />
-            <input type="email" value={user.email} readOnly className="input input-bordered w-full bg-gray-100" />
-            <input type="date" {...register("date")} required className="input input-bordered w-full" />
-            <input type="text" placeholder="Service Location" {...register("location")} required className="input input-bordered w-full" />
-            <button className="btn btn-accent w-full mt-4">Confirm Booking</button>
-          </form>
-          <div className="modal-action">
-            <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" onClick={() => document.getElementById('booking-modal').close()}>✕</button>
-          </div>
-        </div>
-      </dialog>
-    </div>
-  );
+    );
 };
 
-export default ServiceDetails;
+export default Services;
